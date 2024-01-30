@@ -127,11 +127,13 @@ def main():
     if preview_button:
         app.preview_watermark(uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent)
 
-    st.markdown("**Hỗ trợ:**")
-    st.write("Truong Quoc An")
-    st.write("TPBank")
-    st.write("0327026628")
-    st.write("❤️")
+    donate_button = st.button("Donate")
+    if donate_button:
+        with st.expander("Hỗ trợ"):
+            st.write("Truong Quoc An")
+            st.write("TPBank")
+            st.write("0327026628")
+            st.write("❤️")
 
 if __name__ == "__main__":
     main()
