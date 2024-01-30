@@ -7,7 +7,9 @@ from base64 import b64encode
 
 class WatermarkApp:
     def __init__(self):
-        st.title("Auto watermark")
+        st.title("Auto watermark - made by Truong Quoc An")
+        st.info("Need support? Click the button below!")
+        self.support_box = st.empty()
 
     def add_watermark(self, uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_file:
@@ -23,11 +25,11 @@ class WatermarkApp:
                     watermarked_image_bytes = self.image_to_bytes(watermarked_image)
                     zipf.writestr(f"watermarked_{i}.png", watermarked_image_bytes.getvalue())
 
-                    # Cập nhật thanh tiến trình
+                    # Update progress bar
                     progress_bar.progress(i / n_files)
                     counter_text.text(f"{i}/{n_files} ảnh đã được Watermark")
 
-            # Tạo liên kết tải xuống cho file zip
+            # Provide download link for the zip file
             st.markdown(self.get_binary_file_downloader_html(output_zip, "watermarked_images.zip", "Tải xuống Ảnh Đã Watermark"), unsafe_allow_html=True)
 
     def preview_watermark(self, uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent):
@@ -41,26 +43,26 @@ class WatermarkApp:
     def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
         original_image = Image.open(uploaded_file)
 
-        # Chuyển đổi sang chế độ RGB nếu ảnh đang ở chế độ CMYK
+        # Convert to RGB mode if the image is in CMYK mode
         if original_image.mode == "CMYK":
             original_image = original_image.convert("RGB")
 
-        # Tính toán kích thước tối đa dựa trên kích thước ảnh gốc và phần trăm đã chỉ định
+        # Calculate the maximum dimensions based on the original image size and the specified percentage
         max_width = int(original_image.width * max_dimension_percent / 100)
         max_height = int(original_image.height * max_dimension_percent / 100)
 
-        # Thay đổi kích thước ảnh để giảm thời gian xử lý
+        # Resize the image to reduce processing time
         original_image.thumbnail((max_width, max_height))
 
         watermark = Image.open(watermark_path)
 
-        # Thay đổi kích thước của dấu nước dựa trên phần trăm kích thước
+        # Resize watermark based on size percentage
         watermark_width = original_image.width * size // 100
         w_percent = watermark_width / float(watermark.width)
         watermark_height = int(w_percent * watermark.height)
         watermark = watermark.resize((watermark_width, watermark_height), Image.LANCZOS)
 
-        # Tính toán vị trí của dấu nước
+        # Calculate watermark position
         if "Top" in position:
             y_position = 0
         elif "Bottom" in position:
@@ -75,7 +77,7 @@ class WatermarkApp:
         else:
             x_position = (original_image.width - watermark_width) // 2
 
-        # Chuyển đổi độ trong suốt thành giá trị alpha
+        # Convert opacity to alpha value
         watermark = watermark.convert("RGBA")
         watermark_with_opacity = Image.new("RGBA", watermark.size)
         for x in range(watermark.width):
@@ -83,7 +85,7 @@ class WatermarkApp:
                 r, g, b, a = watermark.getpixel((x, y))
                 watermark_with_opacity.putpixel((x, y), (r, g, b, int(a * opacity)))
 
-        # Dán dấu nước lên ảnh gốc
+        # Paste watermark onto original image
         watermarked_image = original_image.copy()
         watermarked_image.paste(watermark_with_opacity, (x_position, y_position), watermark_with_opacity)
 
@@ -125,6 +127,9 @@ def main():
 
     if preview_button:
         app.preview_watermark(uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent)
+
+    if st.button("Hỗ trợ❤️"):
+        app.support_box.text("Truong Quoc An\nTPBank\n0327026628\n❤️")
 
 if __name__ == "__main__":
     main()
