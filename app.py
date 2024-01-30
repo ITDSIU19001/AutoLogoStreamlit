@@ -7,9 +7,8 @@ from base64 import b64encode
 
 class WatermarkApp:
     def __init__(self):
-        st.title("Auto watermark - made by Truong Quoc An")
-        st.info("Need support? Click the button below!")
-        self.support_box = st.empty()
+        st.title("Auto watermark")
+        st.write("Made by Truong Quoc An")
 
     def add_watermark(self, uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_file:
@@ -27,10 +26,10 @@ class WatermarkApp:
 
                     # Update progress bar
                     progress_bar.progress(i / n_files)
-                    counter_text.text(f"{i}/{n_files} ảnh đã được Watermark")
+                    counter_text.text(f"{i}/{n_files} images watermarked")
 
             # Provide download link for the zip file
-            st.markdown(self.get_binary_file_downloader_html(output_zip, "watermarked_images.zip", "Tải xuống Ảnh Đã Watermark"), unsafe_allow_html=True)
+            st.markdown(self.get_binary_file_downloader_html(output_zip, "watermarked_images.zip", "Download Watermarked Images"), unsafe_allow_html=True)
 
     def preview_watermark(self, uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_file:
@@ -38,7 +37,7 @@ class WatermarkApp:
             first_uploaded_file = uploaded_files[0]
 
             watermarked_image = self.add_watermark_to_image(first_uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
-            st.image(watermarked_image, caption="Xem trước Ảnh đã Watermark")
+            st.image(watermarked_image, caption="Preview of Watermarked Image")
 
     def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
         original_image = Image.open(uploaded_file)
@@ -128,7 +127,7 @@ def main():
     if preview_button:
         app.preview_watermark(uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent)
 
-    if st.button("Hỗ trợ❤️"):
+    if st.button("Hỗ trợ"):
         app.support_box.text("Truong Quoc An\nTPBank\n0327026628\n❤️")
 
 if __name__ == "__main__":
