@@ -62,16 +62,16 @@ class WatermarkApp:
         watermark = watermark.resize((watermark_width, watermark_height), Image.LANCZOS)
 
         # Calculate watermark position
-        if "Top" in position:
+        if "Trên" in position:
             y_position = 0
-        elif "Bottom" in position:
+        elif "Dưới" in position:
             y_position = original_image.height - watermark_height
         else:
             y_position = (original_image.height - watermark_height) // 2
 
-        if "Left" in position:
+        if "Trái" in position:
             x_position = 0
-        elif "Right" in position:
+        elif "Phải" in position:
             x_position = original_image.width - watermark_width
         else:
             x_position = (original_image.width - watermark_width) // 2
