@@ -49,8 +49,18 @@ class WatermarkApp:
             watermarked_image = self.add_watermark_to_image(first_uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
             st.image(watermarked_image, caption="Preview of Watermarked Image")
 
-    def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
-        original_image = Image.open(uploaded_file)
+def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
+        # Check if the uploaded file is None
+        if uploaded_file is None:
+            st.error("No image uploaded.")
+            return None
+
+        # Open the image file
+        try:
+            original_image = Image.open(uploaded_file)
+        except Exception as e:
+            st.error(f"Error: {e}")
+            return None
 
         # Resize the image if its size exceeds the limit
         max_allowed_pixels = 178956970
