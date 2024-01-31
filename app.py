@@ -19,60 +19,81 @@ class WatermarkApp:
             unsafe_allow_html=True
         )
 
-    @st.cache
-    def add_watermark_to_image(self, uploaded_files, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
-        watermarked_images = []
-        for uploaded_file in uploaded_files:
-            original_image = Image.open(uploaded_file)
-            # Convert to RGB mode if the image is in CMYK mode
-            if original_image.mode == "CMYK":
-                original_image = original_image.convert("RGB")
+    def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
+        if uploaded_files and watermark_path:
+            output_zip = io.BytesIO()
+            with zipfile.ZipFile(output_zip, "w") as zipf:
+                progress_bar = st.progress(0)
+                counter_text = st.empty()
+                n_files = len(uploaded_files)
+                for i, uploaded_file in enumerate(uploaded_files, start=1):
+                    watermarked_image = self.add_watermark_to_image(uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+                    watermarked_image_bytes = self.image_to_bytes(watermarked_image)
+                    zipf.writestr(f"watermarked_{i}.png", watermarked_image_bytes.getvalue())
 
-            # Calculate the maximum dimensions based on the original image size and the specified percentage
-            max_width = int(original_image.width * max_dimension_percent / 100)
-            max_height = int(original_image.height * max_dimension_percent / 100)
+                    # Update progress bar
+                    progress_bar.progress(i / n_files)
+                    counter_text.text(f"{i}/{n_files} images watermarked")
 
-            # Resize the image to reduce processing time
-            original_image.thumbnail((max_width, max_height))
+            # Provide download button for the zip file
+            st.download_button(label="Download Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
 
-            watermark = Image.open(watermark_path)
+    def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
+        if uploaded_files and watermark_path:
+            first_uploaded_file = uploaded_files[0]
+            watermarked_image = self.add_watermark_to_image(first_uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+            st.image(watermarked_image, caption="Preview of Watermarked Image")
 
-            # Resize watermark based on size percentage
-            watermark_width = original_image.width * size // 100
-            w_percent = watermark_width / float(watermark.width)
-            watermark_height = int(w_percent * watermark.height)
-            watermark = watermark.resize((watermark_width, watermark_height), Image.LANCZOS)
+    def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
+        original_image = Image.open(uploaded_file)
 
-            # Calculate watermark position
-            if "Trên" in position:
-                y_position = 0
-            elif "Dưới" in position:
-                y_position = original_image.height - watermark_height
-            else:
-                y_position = (original_image.height - watermark_height) // 2
+        # Convert to RGB mode if the image is in CMYK mode
+        if original_image.mode == "CMYK":
+            original_image = original_image.convert("RGB")
 
-            if "Trái" in position:
-                x_position = 0
-            elif "Phải" in position:
-                x_position = original_image.width - watermark_width
-            else:
-                x_position = (original_image.width - watermark_width) // 2
+        # Calculate the maximum dimensions based on the original image size and the specified percentage
+        max_width = int(original_image.width * max_dimension_percent / 100)
+        max_height = int(original_image.height * max_dimension_percent / 100)
 
-            # Convert opacity to alpha value
-            watermark = watermark.convert("RGBA")
-            watermark_with_opacity = Image.new("RGBA", watermark.size)
-            for x in range(watermark.width):
-                for y in range(watermark.height):
-                    r, g, b, a = watermark.getpixel((x, y))
-                    watermark_with_opacity.putpixel((x, y), (r, g, b, int(a * opacity)))
+        # Resize the image to reduce processing time
+        original_image.thumbnail((max_width, max_height))
 
-            # Paste watermark onto original image
-            watermarked_image = original_image.copy()
-            watermarked_image.paste(watermark_with_opacity, (x_position, y_position), watermark_with_opacity)
+        watermark = Image.open(watermark_path)
 
-            watermarked_images.append(watermarked_image)
+        # Resize watermark based on size percentage
+        watermark_width = original_image.width * size // 100
+        w_percent = watermark_width / float(watermark.width)
+        watermark_height = int(w_percent * watermark.height)
+        watermark = watermark.resize((watermark_width, watermark_height), Image.LANCZOS)
 
-        return watermarked_images
+        # Calculate watermark position
+        if "Trên" in position:
+            y_position = 0
+        elif "Dưới" in position:
+            y_position = original_image.height - watermark_height
+        else:
+            y_position = (original_image.height - watermark_height) // 2
+
+        if "Trái" in position:
+            x_position = 0
+        elif "Phải" in position:
+            x_position = original_image.width - watermark_width
+        else:
+            x_position = (original_image.width - watermark_width) // 2
+
+        # Convert opacity to alpha value
+        watermark = watermark.convert("RGBA")
+        watermark_with_opacity = Image.new("RGBA", watermark.size)
+        for x in range(watermark.width):
+            for y in range(watermark.height):
+                r, g, b, a = watermark.getpixel((x, y))
+                watermark_with_opacity.putpixel((x, y), (r, g, b, int(a * opacity)))
+
+        # Paste watermark onto original image
+        watermarked_image = original_image.copy()
+        watermarked_image.paste(watermark_with_opacity, (x_position, y_position), watermark_with_opacity)
+
+        return watermarked_image
 
     def image_to_bytes(self, image):
         img_byte_array = io.BytesIO()
@@ -103,9 +124,6 @@ def main():
     opacity = st.slider("Chọn độ trong suốt của watermark", min_value=0.0, max_value=1.0, value=0.2)
     max_dimension_percent = st.slider("Chọn kích thước tối đa là bao nhiêu phần trăm so với ảnh gốc (Số càng nhỏ chạy càng nhanh)", min_value=1, max_value=100, value=50)
 
-    if "expander_open" not in st.session_state:
-        st.session_state.expander_open = True
-
     col1, col2, col3 = st.columns([3, 1, 3])
     with col2:
         preview_button = st.button("Xem Trước")
@@ -113,32 +131,12 @@ def main():
     with col2:
         start_process_button = st.button("Bắt đầu quá trình watermark")
 
-    watermarked_images = None
     if start_process_button:
-        watermarked_images = app.add_watermark_to_image(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+        app.add_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
 
     if preview_button:
         app.preview_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
 
-    with st.expander("Danh sách ảnh đã được đóng dấu", expanded=st.session_state.expander_open):
-        if watermarked_images:
-            col1, col2 = st.columns([3, 1])
-            for i, image in enumerate(watermarked_images, start=1):
-                preview_image = image.resize((100, 100))
-                with col1:
-                    st.image(preview_image, caption=f"Watermarked Image {i}")
-                with col2:
-                    st.download_button(label=f"Download Image {i}", data=app.image_to_bytes(image).getvalue(), file_name=f"watermarked_image_{i}.png")
-
-    with st.expander("Danh sách ảnh đã được đóng dấu", expanded=st.session_state.expander_open):
-        if watermarked_images:
-            col1, col2 = st.columns([3, 1])
-            for i, image in enumerate(watermarked_images, start=1):
-                preview_image = image.resize((100, 100))
-                with col1:
-                    st.image(preview_image, caption=f"Watermarked Image {i}")
-                with col2:
-                    st.download_button(label=f"Download Image {i}", data=app.image_to_bytes(image).getvalue(), file_name=f"watermarked_image_{i}.png")
     with st.expander("Hỗ trợ❤️❤️"):
         st.write("Truong Quoc An")
         st.write("TPBank")
