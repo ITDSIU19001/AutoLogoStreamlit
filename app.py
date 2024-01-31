@@ -118,7 +118,7 @@ def main():
     if preview_button:
         app.preview_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
 
-    with st.expander("Danh sách ảnh đã được đóng dấu"):
+    with st.expander("Danh sách ảnh đã được đóng dấu", expanded=True):
         if watermarked_images:
             col1, col2 = st.columns([3, 1])
             for i, image in enumerate(watermarked_images, start=1):
