@@ -7,8 +7,8 @@ from base64 import b64encode
 
 class WatermarkApp:
     def __init__(self):
-        st.title("Auto watermark")
-        st.write("Made by Truong Quoc An")
+        st.title("Auto watermark".center(66))
+        st.write("Made by Truong Quoc An".rjust(66))
 
     def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
@@ -111,7 +111,8 @@ def main():
             st.image("logo2.png", width=50)
         else:
             watermark_path = watermark_file = st.file_uploader("Chọn watermark hoặc tải lên mới", type=["png", "jpg", "jpeg", "gif"])
-
+    else:
+        watermark_path = app.save_uploaded_file(watermark_file, "watermark.png")
 
     watermark_position = st.selectbox("Chọn vị trí watermark", ["Phía Trên Bên Phải", "Phía Trên Ở Giữa", "Phía Trên Bên Trái", "Ở Giữa Bên Phải", "Ở Giữa", "Ở Giữa Bên Trái", "Phía Dưới Bên Phải", "Phía Dưới Ở Giữa", "Phía Dưới Bên Trái"], index=4)
     watermark_size = st.slider("Chọn kích thước watermark (phần trăm)", min_value=1, max_value=100, value=50)
