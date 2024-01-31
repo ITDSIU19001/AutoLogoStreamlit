@@ -135,7 +135,8 @@ def main():
     with st.expander("Danh sách ảnh đã được đóng dấu"):
         if watermarked_images:
             for i, image in enumerate(watermarked_images, start=1):
-                st.image(image, caption=f"Watermarked Image {i}")
+                preview_image = watermarked_images.resize((100, 100))
+                st.image(preview_image, caption=f"Watermarked Image {i}")
 
     if watermarked_images:
         # Zip watermarked images
