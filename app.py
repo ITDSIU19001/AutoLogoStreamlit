@@ -52,6 +52,14 @@ class WatermarkApp:
     def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
         original_image = Image.open(uploaded_file)
 
+        # Resize the image if its size exceeds the limit
+        max_allowed_pixels = 178956970
+        if original_image.width * original_image.height > max_allowed_pixels:
+            ratio = (max_allowed_pixels / (original_image.width * original_image.height)) ** 0.5
+            new_width = int(original_image.width * ratio)
+            new_height = int(original_image.height * ratio)
+            original_image = original_image.resize((new_width, new_height))
+
         # Convert to RGB mode if the image is in CMYK mode
         if original_image.mode == "CMYK":
             original_image = original_image.convert("RGB")
