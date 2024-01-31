@@ -19,25 +19,7 @@ class WatermarkApp:
             unsafe_allow_html=True
         )
 
-    def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
-        if uploaded_files and watermark_path:
-            watermarked_images = []
-            n_files = len(uploaded_files)
-            for i, uploaded_file in enumerate(uploaded_files, start=1):
-                watermarked_image = self.add_watermark_to_image(uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
-                watermarked_images.append(watermarked_image)
-
-                # Resize the image for preview
-                preview_image = watermarked_image.resize((100, 100))
-
-            return watermarked_images
-
-    def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
-        if uploaded_files and watermark_path:
-            first_uploaded_file = uploaded_files[0]
-            watermarked_image = self.add_watermark_to_image(first_uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
-            st.image(watermarked_image, caption="Preview of Watermarked Image")
-
+    @st.cache
     def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
         original_image = Image.open(uploaded_file)
 
@@ -141,18 +123,6 @@ def main():
                     st.image(preview_image, caption=f"Watermarked Image {i}")
                 with col2:
                     st.download_button(label=f"Download Image {i}", data=app.image_to_bytes(image).getvalue(), file_name=f"watermarked_image_{i}.png")
-
-
-    if watermarked_images:
-        # Zip watermarked images
-        output_zip = io.BytesIO()
-        with zipfile.ZipFile(output_zip, "w") as zipf:
-            for i, image in enumerate(watermarked_images, start=1):
-                image_byte_array = app.image_to_bytes(image)
-                zipf.writestr(f"watermarked_{i}.png", image_byte_array.getvalue())
-
-        # Provide download button for the zip file
-        st.download_button(label="Download All Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
 
     with st.expander("Hỗ trợ❤️❤️"):
         st.write("Truong Quoc An")
