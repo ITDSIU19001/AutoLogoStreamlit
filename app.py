@@ -99,8 +99,6 @@ def main():
     app = WatermarkApp()
 
     uploaded_files = st.file_uploader("Chọn ảnh để Watermark", type=["png", "jpg", "jpeg", "gif"], accept_multiple_files=True)
-
-    watermark_file = st.file_uploader("Chọn watermark hoặc tải lên mới", type=["png", "jpg", "jpeg", "gif"])
     if watermark_file is None:
         watermark_option = st.radio("Chọn một trong những logo có sẵn hoặc tải lên mới:", ("Logo 1", "Logo 2", "Tải lên mới"))
         if watermark_option == "Logo 1":
@@ -108,7 +106,7 @@ def main():
         elif watermark_option == "Logo 2":
             watermark_path = "logo2.png"  # Replace with the path to your pre-existing watermark file
         else:
-            watermark_path = None
+            watermark_file = st.file_uploader("Chọn watermark hoặc tải lên mới", type=["png", "jpg", "jpeg", "gif"])
     else:
         watermark_path = app.save_uploaded_file(watermark_file, "watermark.png")
 
