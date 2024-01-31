@@ -49,7 +49,7 @@ class WatermarkApp:
             watermarked_image = self.add_watermark_to_image(first_uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
             st.image(watermarked_image, caption="Preview of Watermarked Image")
 
-def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
+    def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
         # Check if the uploaded file is None
         if uploaded_file is None:
             st.error("No image uploaded.")
