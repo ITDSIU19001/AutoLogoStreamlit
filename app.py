@@ -7,8 +7,20 @@ from base64 import b64encode
 
 class WatermarkApp:
     def __init__(self):
-        st.title("Auto watermark".center(66))
-        st.write("Made by Truong Quoc An".rjust(66))
+        st.title("Auto watermark")
+        st.write("Made by Truong Quoc An")
+
+        # Center-align the title
+        st.markdown(
+            "<h1 style='text-align: center;'>Auto watermark</h1>",
+            unsafe_allow_html=True
+        )
+
+        # Right-align the st.write text
+        st.markdown(
+            "<div style='text-align: right;'>Made by Truong Quoc An</div>",
+            unsafe_allow_html=True
+        )
 
     def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
