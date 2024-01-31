@@ -7,9 +7,6 @@ from base64 import b64encode
 
 class WatermarkApp:
     def __init__(self):
-        st.title("Auto watermark")
-        st.write("Made by Truong Quoc An")
-
         # Center-align the title
         st.markdown(
             "<h1 style='text-align: center;'>Auto watermark</h1>",
