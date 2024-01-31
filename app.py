@@ -109,7 +109,8 @@ def main():
 
     watermarked_images = None
     if start_process_button:
-        watermarked_images = app.add_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+        watermarked_images = app.add_watermark_to_image(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+
 
     if preview_button:
         app.preview_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
