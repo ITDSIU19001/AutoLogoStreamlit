@@ -21,22 +21,27 @@ class WatermarkApp:
 
     def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
-            output_zip = io.BytesIO()
-            with zipfile.ZipFile(output_zip, "w") as zipf:
-                progress_bar = st.progress(0)
-                counter_text = st.empty()
-                n_files = len(uploaded_files)
-                for i, uploaded_file in enumerate(uploaded_files, start=1):
-                    watermarked_image = self.add_watermark_to_image(uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
-                    watermarked_image_bytes = self.image_to_bytes(watermarked_image)
-                    zipf.writestr(f"watermarked_{i}.png", watermarked_image_bytes.getvalue())
+            if len(uploaded_files) == 1:  # Process single image without compressing to zip
+                watermarked_image = self.add_watermark_to_image(uploaded_files[0], watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+                watermarked_image_bytes = self.image_to_bytes(watermarked_image)
+                st.download_button(label="Download Watermarked Image", data=watermarked_image_bytes.getvalue(), file_name="watermarked_image.png")
+            else:
+                output_zip = io.BytesIO()
+                with zipfile.ZipFile(output_zip, "w") as zipf:
+                    progress_bar = st.progress(0)
+                    counter_text = st.empty()
+                    n_files = len(uploaded_files)
+                    for i, uploaded_file in enumerate(uploaded_files, start=1):
+                        watermarked_image = self.add_watermark_to_image(uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+                        watermarked_image_bytes = self.image_to_bytes(watermarked_image)
+                        zipf.writestr(f"watermarked_{i}.png", watermarked_image_bytes.getvalue())
 
-                    # Update progress bar
-                    progress_bar.progress(i / n_files)
-                    counter_text.text(f"{i}/{n_files} images watermarked")
+                        # Update progress bar
+                        progress_bar.progress(i / n_files)
+                        counter_text.text(f"{i}/{n_files} images watermarked")
 
-            # Provide download button for the zip file
-            st.download_button(label="Download Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
+                # Provide download button for the zip file
+                st.download_button(label="Download Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
 
     def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
