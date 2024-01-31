@@ -105,8 +105,10 @@ def main():
         watermark_option = st.radio("Chọn một trong những logo có sẵn hoặc tải lên mới:", ("Logo HTX Thanh Ngọt Năm Cập", "Logo Dr. KaKa", "Tải lên mới"))
         if watermark_option == "Logo HTX Thanh Ngọt Năm Cập":
             watermark_path = "logo1.png"  # Replace with the path to your pre-existing watermark file
+            st.image("logo1.png", width=50)
         elif watermark_option == "Logo Dr. KaKa":
             watermark_path = "logo2.png"  # Replace with the path to your pre-existing watermark file
+            st.image("logo2.png", width=50)
         else:
             watermark_path = watermark_file = st.file_uploader("Chọn watermark hoặc tải lên mới", type=["png", "jpg", "jpeg", "gif"])
     else:
