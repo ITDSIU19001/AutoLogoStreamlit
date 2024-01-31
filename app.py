@@ -21,22 +21,25 @@ class WatermarkApp:
 
     def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
-            output_zip = io.BytesIO()
-            with zipfile.ZipFile(output_zip, "w") as zipf:
-                progress_bar = st.progress(0)
-                counter_text = st.empty()
-                n_files = len(uploaded_files)
-                for i, uploaded_file in enumerate(uploaded_files, start=1):
-                    watermarked_image = self.add_watermark_to_image(uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
-                    watermarked_image_bytes = self.image_to_bytes(watermarked_image)
-                    zipf.writestr(f"watermarked_{i}.png", watermarked_image_bytes.getvalue())
+            watermarked_images = []
+            for i, uploaded_file in enumerate(uploaded_files, start=1):
+                watermarked_image = self.add_watermark_to_image(uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+                watermarked_images.append(watermarked_image)
 
-                    # Update progress bar
-                    progress_bar.progress(i / n_files)
-                    counter_text.text(f"{i}/{n_files} images watermarked")
+            # Display watermarked images with download buttons
+            with st.expander("Watermarked Images"):
+                for i, watermarked_image in enumerate(watermarked_images, start=1):
+                    st.image(watermarked_image, caption=f"Watermarked Image {i}")
+                    self.download_button(watermarked_image, f"Download Watermarked Image {i}")
 
-            # Provide download button for the zip file
-            st.download_button(label="Download Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
+    def download_button(self, data, label):
+        """
+        Generates a download button for the given data.
+        """
+        buffer = io.BytesIO()
+        data.save(buffer, format="PNG")
+        data_bytes = buffer.getvalue()
+        st.download_button(label, data_bytes, f"{label}.png")
 
     def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
@@ -94,11 +97,6 @@ class WatermarkApp:
         watermarked_image.paste(watermark_with_opacity, (x_position, y_position), watermark_with_opacity)
 
         return watermarked_image
-
-    def image_to_bytes(self, image):
-        img_byte_array = io.BytesIO()
-        image.save(img_byte_array, format="PNG")
-        return img_byte_array
 
 def main():
     app = WatermarkApp()
