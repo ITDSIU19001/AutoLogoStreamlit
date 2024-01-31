@@ -22,24 +22,14 @@ class WatermarkApp:
     def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
             watermarked_images = []
+            n_files = len(uploaded_files)
             for i, uploaded_file in enumerate(uploaded_files, start=1):
                 watermarked_image = self.add_watermark_to_image(uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
                 watermarked_images.append(watermarked_image)
 
-            # Display watermarked images with download buttons
-            with st.expander("Watermarked Images"):
-                for i, watermarked_image in enumerate(watermarked_images, start=1):
-                    st.image(watermarked_image, caption=f"Watermarked Image {i}")
-                    self.download_button(watermarked_image, f"Download Watermarked Image {i}")
+                st.image(watermarked_image, caption=f"Watermarked Image {i}/{n_files}")
 
-    def download_button(self, data, label):
-        """
-        Generates a download button for the given data.
-        """
-        buffer = io.BytesIO()
-        data.save(buffer, format="PNG")
-        data_bytes = buffer.getvalue()
-        st.download_button(label, data_bytes, f"{label}.png")
+            return watermarked_images
 
     def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
@@ -98,6 +88,11 @@ class WatermarkApp:
 
         return watermarked_image
 
+    def image_to_bytes(self, image):
+        img_byte_array = io.BytesIO()
+        image.save(img_byte_array, format="PNG")
+        return img_byte_array
+
 def main():
     app = WatermarkApp()
 
@@ -129,11 +124,28 @@ def main():
     with col2:
         start_process_button = st.button("Bắt đầu quá trình watermark")
 
+    watermarked_images = None
     if start_process_button:
-        app.add_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+        watermarked_images = app.add_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
 
     if preview_button:
         app.preview_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+
+    with st.expander("Danh sách ảnh đã được đóng dấu"):
+        if watermarked_images:
+            for i, image in enumerate(watermarked_images, start=1):
+                st.image(image, caption=f"Watermarked Image {i}")
+
+    if watermarked_images:
+        # Zip watermarked images
+        output_zip = io.BytesIO()
+        with zipfile.ZipFile(output_zip, "w") as zipf:
+            for i, image in enumerate(watermarked_images, start=1):
+                image_byte_array = app.image_to_bytes(image)
+                zipf.writestr(f"watermarked_{i}.png", image_byte_array.getvalue())
+
+        # Provide download button for the zip file
+        st.download_button(label="Download All Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
 
     with st.expander("Hỗ trợ❤️❤️"):
         st.write("Truong Quoc An")
