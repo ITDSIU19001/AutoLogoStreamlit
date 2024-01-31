@@ -35,8 +35,8 @@ class WatermarkApp:
                     progress_bar.progress(i / n_files)
                     counter_text.text(f"{i}/{n_files} images watermarked")
 
-            # Provide download link for the zip file
-            st.markdown(self.get_binary_file_downloader_html(output_zip, "watermarked_images.zip", "Download Watermarked Images"), unsafe_allow_html=True)
+            # Provide download button for the zip file
+            st.download_button(label="Download Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
 
     def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
@@ -99,10 +99,6 @@ class WatermarkApp:
         img_byte_array = io.BytesIO()
         image.save(img_byte_array, format="PNG")
         return img_byte_array
-
-    def get_binary_file_downloader_html(self, bin_data, file_label='File', button_label='Download'):
-        href = f'<a href="data:application/zip;base64,{b64encode(bin_data.getvalue()).decode()}" download="{file_label}">{button_label}</a>'
-        return href
 
 def main():
     app = WatermarkApp()
