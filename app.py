@@ -134,9 +134,14 @@ def main():
 
     with st.expander("Danh sách ảnh đã được đóng dấu"):
         if watermarked_images:
+            col1, col2 = st.columns([3, 1])
             for i, image in enumerate(watermarked_images, start=1):
                 preview_image = image.resize((100, 100))
-                st.image(preview_image, caption=f"Watermarked Image {i}")
+                with col1:
+                    st.image(preview_image, caption=f"Watermarked Image {i}")
+                with col2:
+                    st.download_button(label=f"Download Image {i}", data=app.image_to_bytes(image).getvalue(), file_name=f"watermarked_image_{i}.png")
+
 
     if watermarked_images:
         # Zip watermarked images
