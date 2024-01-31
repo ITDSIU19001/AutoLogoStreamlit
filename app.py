@@ -7,7 +7,7 @@ from base64 import b64encode
 
 class WatermarkApp:
     def __init__(self):
-        st.title("Auto watermark")
+        st.title("Auto watermark123")
         st.write("Made by Truong Quoc An")
 
     def add_watermark(self, uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent):
