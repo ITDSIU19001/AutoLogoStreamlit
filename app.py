@@ -104,6 +104,12 @@ class WatermarkApp:
         href = f'<a href="data:application/zip;base64,{b64encode(bin_data.getvalue()).decode()}" download="{file_label}">{button_label}</a>'
         return href
 
+    def compress_image(self, uploaded_file, quality):
+        img = Image.open(uploaded_file)
+        img_byte_array = io.BytesIO()
+        img.save(img_byte_array, format="JPEG", quality=quality)
+        return img_byte_array
+
 def main():
     app = WatermarkApp()
 
@@ -126,6 +132,17 @@ def main():
 
     if preview_button:
         app.preview_watermark(uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent)
+
+    with st.expander("Nén ảnh"):
+        quality = st.slider("Chọn chất lượng nén ảnh (phần trăm)", min_value=1, max_value=100, value=80)
+        if uploaded_files:
+            compressed_images = []
+            for uploaded_file in uploaded_files:
+                compressed_image = app.compress_image(uploaded_file, quality)
+                compressed_images.append(compressed_image)
+            st.write("Ảnh đã được nén:")
+            for compressed_image in compressed_images:
+                st.image(compressed_image, use_column_width=True)
 
     with st.expander("Hỗ trợ❤️❤️"):
         st.write("Truong Quoc An")
