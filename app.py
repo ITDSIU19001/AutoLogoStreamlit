@@ -103,6 +103,9 @@ def main():
     opacity = st.slider("Chọn độ trong suốt của watermark", min_value=0.0, max_value=1.0, value=0.2)
     max_dimension_percent = st.slider("Chọn kích thước tối đa là bao nhiêu phần trăm so với ảnh gốc (Số càng nhỏ chạy càng nhanh)", min_value=1, max_value=100, value=50)
 
+    if "expander_open" not in st.session_state:
+        st.session_state.expander_open = True
+
     col1, col2, col3 = st.columns([3, 1, 3])
     with col2:
         preview_button = st.button("Xem Trước")
@@ -112,8 +115,7 @@ def main():
 
     watermarked_images = None
     if start_process_button:
-        watermarked_images = app.add_watermark_to_image(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
-
+        watermarked_images = app.add_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
 
     if preview_button:
         app.preview_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
@@ -127,9 +129,6 @@ def main():
                     st.image(preview_image, caption=f"Watermarked Image {i}")
                 with col2:
                     st.download_button(label=f"Download Image {i}", data=app.image_to_bytes(image).getvalue(), file_name=f"watermarked_image_{i}.png")
-
-    st.session_state.expander_open = True  # Set the expander state to open
-
     with st.expander("Hỗ trợ❤️❤️"):
         st.write("Truong Quoc An")
         st.write("TPBank")
