@@ -10,10 +10,8 @@ class WatermarkApp:
         st.title("Auto watermark")
         st.write("Made by Truong Quoc An")
 
-    def add_watermark(self, uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent):
-        if uploaded_files and watermark_file:
-            watermark_path = self.save_uploaded_file(watermark_file, "watermark.png")
-
+    def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
+        if uploaded_files and watermark_path:
             output_zip = io.BytesIO()
             with zipfile.ZipFile(output_zip, "w") as zipf:
                 progress_bar = st.progress(0)
@@ -31,11 +29,9 @@ class WatermarkApp:
             # Provide download link for the zip file
             st.markdown(self.get_binary_file_downloader_html(output_zip, "watermarked_images.zip", "Download Watermarked Images"), unsafe_allow_html=True)
 
-    def preview_watermark(self, uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent):
-        if uploaded_files and watermark_file:
-            watermark_path = self.save_uploaded_file(watermark_file, "watermark.png")
+    def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
+        if uploaded_files and watermark_path:
             first_uploaded_file = uploaded_files[0]
-
             watermarked_image = self.add_watermark_to_image(first_uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
             st.image(watermarked_image, caption="Preview of Watermarked Image")
 
@@ -90,11 +86,6 @@ class WatermarkApp:
 
         return watermarked_image
 
-    def save_uploaded_file(self, uploaded_file, target_filename):
-        with open(target_filename, "wb") as f:
-            f.write(uploaded_file.read())
-        return target_filename
-
     def image_to_bytes(self, image):
         img_byte_array = io.BytesIO()
         image.save(img_byte_array, format="PNG")
@@ -104,17 +95,23 @@ class WatermarkApp:
         href = f'<a href="data:application/zip;base64,{b64encode(bin_data.getvalue()).decode()}" download="{file_label}">{button_label}</a>'
         return href
 
-    def compress_image(self, uploaded_file, quality):
-        img = Image.open(uploaded_file)
-        img_byte_array = io.BytesIO()
-        img.save(img_byte_array, format="JPEG", quality=quality)
-        return img_byte_array
-
 def main():
     app = WatermarkApp()
 
     uploaded_files = st.file_uploader("Chọn ảnh để Watermark", type=["png", "jpg", "jpeg", "gif"], accept_multiple_files=True)
-    watermark_file = st.file_uploader("Chọn watermark", type=["png", "jpg", "jpeg", "gif"])
+
+    watermark_file = st.file_uploader("Chọn watermark hoặc tải lên mới", type=["png", "jpg", "jpeg", "gif"])
+    if watermark_file is None:
+        watermark_option = st.radio("Chọn một trong những logo có sẵn hoặc tải lên mới:", ("Logo 1", "Logo 2", "Tải lên mới"))
+        if watermark_option == "Logo 1":
+            watermark_path = "logo1.png"  # Replace with the path to your pre-existing watermark file
+        elif watermark_option == "Logo 2":
+            watermark_path = "logo2.png"  # Replace with the path to your pre-existing watermark file
+        else:
+            watermark_path = None
+    else:
+        watermark_path = app.save_uploaded_file(watermark_file, "watermark.png")
+
     watermark_position = st.selectbox("Chọn vị trí watermark", ["Phía Trên Bên Phải", "Phía Trên Ở Giữa", "Phía Trên Bên Trái", "Ở Giữa Bên Phải", "Ở Giữa", "Ở Giữa Bên Trái", "Phía Dưới Bên Phải", "Phía Dưới Ở Giữa", "Phía Dưới Bên Trái"])
     watermark_size = st.slider("Chọn kích thước watermark (phần trăm)", min_value=1, max_value=100, value=50)
     opacity = st.slider("Chọn độ trong suốt của watermark", min_value=0.0, max_value=1.0, value=0.2)
@@ -128,21 +125,10 @@ def main():
         start_process_button = st.button("Bắt đầu quá trình watermark")
 
     if start_process_button:
-        app.add_watermark(uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent)
+        app.add_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
 
     if preview_button:
-        app.preview_watermark(uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent)
-
-    with st.expander("Nén ảnh"):
-        quality = st.slider("Chọn chất lượng nén ảnh (phần trăm)", min_value=1, max_value=100, value=80)
-        if uploaded_files:
-            compressed_images = []
-            for uploaded_file in uploaded_files:
-                compressed_image = app.compress_image(uploaded_file, quality)
-                compressed_images.append(compressed_image)
-            st.write("Ảnh đã được nén:")
-            for compressed_image in compressed_images:
-                st.image(compressed_image, use_column_width=True)
+        app.preview_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
 
     with st.expander("Hỗ trợ❤️❤️"):
         st.write("Truong Quoc An")
