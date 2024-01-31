@@ -29,7 +29,6 @@ class WatermarkApp:
 
                 # Resize the image for preview
                 preview_image = watermarked_image.resize((100, 100))
-                st.image(preview_image, caption=f"Watermarked Image {i}/{n_files}")
 
             return watermarked_images
 
