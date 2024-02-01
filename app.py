@@ -1,10 +1,10 @@
 import streamlit as st
 from PIL import Image
-import pandas as pd
 import os
 import io
 import zipfile
 from base64 import b64encode
+import pandas as pd
 
 class WatermarkApp:
     def __init__(self):
@@ -22,6 +22,16 @@ class WatermarkApp:
 
     def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
+            # Load or create the CSV file
+            if os.path.exists("data.csv"):
+                df = pd.read_csv("data.csv")
+            else:
+                df = pd.DataFrame(columns=["index", "amount", "download"])
+
+            # Update the amount of images being processed
+            n_files = len(uploaded_files)
+            df.loc[len(df)] = [len(df) + 1, n_files, ""]
+
             if len(uploaded_files) == 1:  # Process single image without compressing to zip
                 watermarked_image = self.add_watermark_to_image(uploaded_files[0], watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
                 watermarked_image_bytes = self.image_to_bytes(watermarked_image)
@@ -31,7 +41,6 @@ class WatermarkApp:
                 with zipfile.ZipFile(output_zip, "w") as zipf:
                     progress_bar = st.progress(0)
                     counter_text = st.empty()
-                    n_files = len(uploaded_files)
                     for i, uploaded_file in enumerate(uploaded_files, start=1):
                         watermarked_image = self.add_watermark_to_image(uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
                         watermarked_image_bytes = self.image_to_bytes(watermarked_image)
@@ -41,17 +50,11 @@ class WatermarkApp:
                         progress_bar.progress(i / n_files)
                         counter_text.text(f"{i}/{n_files} images watermarked")
 
-                        # Update CSV file
-                        self.update_csv(i, n_files)
-
                 # Provide download button for the zip file
                 st.download_button(label="Download Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
 
-    def update_csv(self, index, total_images):
-        df = pd.read_csv("data.csv")
-        df.loc[index-1, "Status"] = "Processing"
-        df.loc[index-1, "Amount"] = total_images
-        df.to_csv("data.csv", index=False)
+            # Save the updated CSV
+            df.to_csv("data.csv", index=False)
 
     def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
