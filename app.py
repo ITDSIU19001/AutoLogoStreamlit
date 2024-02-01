@@ -4,6 +4,7 @@ import os
 import io
 import zipfile
 from base64 import b64encode
+import pandas as pd
 
 class WatermarkApp:
     def __init__(self):
@@ -42,6 +43,7 @@ class WatermarkApp:
 
                 # Provide download button for the zip file
                 st.download_button(label="Download Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
+                self.update_csv(len(uploaded_files))
 
     def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
         if uploaded_files and watermark_path:
@@ -122,6 +124,21 @@ class WatermarkApp:
         img_byte_array = io.BytesIO()
         image.save(img_byte_array, format="PNG")
         return img_byte_array
+    def update_csv(self, num_images_processed):
+        # Load CSV data
+        df = pd.read_csv('data.csv')
+
+        # Update index and amount columns
+        df['index'] += 1
+        df['amount'] = num_images_processed
+
+        # Update download column if user clicks download
+        # Assuming there's a global variable or some other mechanism to track download clicks
+        # For example, if download_clicked is True when the user clicks download
+        # df['download'] = 'X' if download_clicked else ''
+
+        # Save updated data to CSV
+        df.to_csv('data.csv', index=False)
 
 def main():
     app = WatermarkApp()
