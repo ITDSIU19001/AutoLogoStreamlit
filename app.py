@@ -60,19 +60,21 @@ class WatermarkApp:
         watermark = watermark.resize((watermark_width, watermark_height), Image.LANCZOS)
 
         # Calculate watermark position
-        if "Top" in position:
+        if "Top" in position[0] and "Left" in position[1]:
+            x_position = 0
             y_position = 0
-        elif "Bottom" in position:
+        elif "Top" in position[0] and "Right" in position[1]:
+            x_position = original_image.width - watermark_width
+            y_position = 0
+        elif "Bottom" in position[0] and "Left" in position[1]:
+            x_position = 0
+            y_position = original_image.height - watermark_height
+        elif "Bottom" in position[0] and "Right" in position[1]:
+            x_position = original_image.width - watermark_width
             y_position = original_image.height - watermark_height
         else:
-            y_position = (original_image.height - watermark_height) // 2
-
-        if "Left" in position:
-            x_position = 0
-        elif "Right" in position:
-            x_position = original_image.width - watermark_width
-        else:
             x_position = (original_image.width - watermark_width) // 2
+            y_position = (original_image.height - watermark_height) // 2
 
         # Convert opacity to alpha value
         watermark = watermark.convert("RGBA")
@@ -115,15 +117,14 @@ class WatermarkApp:
             # Write the result to a file
             final.write_videofile(output_path, codec="libx264", audio_codec="aac")
             
-            print(f"Successfully watermarked {video_path} and saved to {output_path}")
+            st.success(f"Successfully watermarked {video_path} and saved to {output_path}")
         except Exception as e:
-            print(f"Error processing video: {e}")
+            st.error(f"Error processing video: {e}")
 
 def main():
     app = WatermarkApp()
 
     uploaded_files = st.file_uploader("Select image to watermark", type=["png", "jpg", "jpeg", "gif"], accept_multiple_files=True)
-    
     watermark_option = st.radio("Select watermark option or upload new:",
                                 ("Logo HTX Thanh Ngọt Năm Cập", "Logo Dr. KaKa", "Upload New"))
 
@@ -146,16 +147,27 @@ def main():
                                      index=4)
     watermark_opacity = st.slider("Select watermark opacity", min_value=0.0, max_value=1.0, value=0.5)
 
-    if st.button("Start Watermarking"):
+    if st.button("Start Image Watermarking"):
         if uploaded_files:
             for i, uploaded_file in enumerate(uploaded_files):
-                watermarked_image = app.add_watermark_to_image(uploaded_file, watermark_path, position=watermark_position, opacity=watermark_opacity)
+                watermarked_image = app.add_watermark_to_image(uploaded_file, watermark_path, position=watermark_position.split(), opacity=watermark_opacity)
                 if watermarked_image:
                     st.image(watermarked_image, caption=f"Watermarked Image {i+1}")
 
         st.write("---")
 
-        # Placeholder for video watermarking (to be implemented)
+    video_file = st.file_uploader("Select video to watermark", type=["mp4", "mov", "avi"])
+    if video_file:
+        watermark_position_video = st.selectbox("Select watermark position for video",
+                                                ["Top Left", "Top Center", "Top Right", "Center Left", "Center", "Center Right", "Bottom Left", "Bottom Center", "Bottom Right"],
+                                                index=4)
+        video_output_path = "./output/output_video.mp4"
+
+        if st.button("Start Video Watermarking"):
+            if watermark_file:
+                app.add_watermark_to_video(video_file, watermark_path, video_output_path, position=watermark_position_video.split(), opacity=watermark_opacity)
+            else:
+                st.warning("Please upload a watermark image.")
 
 if __name__ == "__main__":
     main()
