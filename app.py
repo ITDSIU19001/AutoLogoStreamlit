@@ -5,12 +5,13 @@ import io
 import zipfile
 from base64 import b64encode
 import pandas as pd
+from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip
 
 class WatermarkApp:
     def __init__(self):
         # Center-align the title
         st.markdown(
-            "<h1 style='text-align: center;'>Auto watermark</h1>",
+            "<h1 style='text-align: center;'>Auto Watermark</h1>",
             unsafe_allow_html=True
         )
 
@@ -20,62 +21,17 @@ class WatermarkApp:
             unsafe_allow_html=True
         )
 
-    def add_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
-        if uploaded_files and watermark_path:
-            # Load or create the CSV file
-            if os.path.exists("data.csv"):
-                df = pd.read_csv("data.csv")
-            else:
-                df = pd.DataFrame(columns=["index", "amount", "download"])
-
-            # Update the amount of images being processed
-            n_files = len(uploaded_files)
-            df.loc[len(df)] = [len(df) + 1, n_files, ""]
-
-            if len(uploaded_files) == 1:  # Process single image without compressing to zip
-                watermarked_image = self.add_watermark_to_image(uploaded_files[0], watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
-                watermarked_image_bytes = self.image_to_bytes(watermarked_image)
-                st.download_button(label="Download Watermarked Image", data=watermarked_image_bytes.getvalue(), file_name="watermarked_image.png")
-            else:
-                output_zip = io.BytesIO()
-                with zipfile.ZipFile(output_zip, "w") as zipf:
-                    progress_bar = st.progress(0)
-                    counter_text = st.empty()
-                    for i, uploaded_file in enumerate(uploaded_files, start=1):
-                        watermarked_image = self.add_watermark_to_image(uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
-                        watermarked_image_bytes = self.image_to_bytes(watermarked_image)
-                        zipf.writestr(f"watermarked_{i}.png", watermarked_image_bytes.getvalue())
-
-                        # Update progress bar
-                        progress_bar.progress(i / n_files)
-                        counter_text.text(f"{i}/{n_files} images watermarked")
-
-                # Provide download button for the zip file
-                st.download_button(label="Download Watermarked Images", data=output_zip.getvalue(), file_name="watermarked_images.zip")
-
-            # Save the updated CSV
-            df.to_csv("data.csv", index=False)
-
-    def preview_watermark(self, uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent):
-        if uploaded_files and watermark_path:
-            first_uploaded_file = uploaded_files[0]
-            watermarked_image = self.add_watermark_to_image(first_uploaded_file, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
-            st.image(watermarked_image, caption="Preview of Watermarked Image")
-
     def add_watermark_to_image(self, uploaded_file, watermark_path, position="Bottom Right", size=50, opacity=0.2, max_dimension_percent=50):
-        # Check if the uploaded file is None
         if uploaded_file is None:
             st.error("No image uploaded.")
             return None
 
-        # Open the image file
         try:
             original_image = Image.open(uploaded_file)
         except Exception as e:
             st.error(f"Error: {e}")
             return None
 
-        # Resize the image if its size exceeds the limit
         max_allowed_pixels = 178956970
         if original_image.width * original_image.height > max_allowed_pixels:
             ratio = (max_allowed_pixels / (original_image.width * original_image.height)) ** 0.5
@@ -83,26 +39,19 @@ class WatermarkApp:
             new_height = int(original_image.height * ratio)
             original_image = original_image.resize((new_width, new_height))
 
-        # Convert to RGB mode if the image is in CMYK mode
         if original_image.mode == "CMYK":
             original_image = original_image.convert("RGB")
 
-        # Calculate the maximum dimensions based on the original image size and the specified percentage
         max_width = int(original_image.width * max_dimension_percent / 100)
         max_height = int(original_image.height * max_dimension_percent / 100)
-
-        # Resize the image to reduce processing time
         original_image.thumbnail((max_width, max_height))
 
         watermark = Image.open(watermark_path)
-
-        # Resize watermark based on size percentage
         watermark_width = original_image.width * size // 100
         w_percent = watermark_width / float(watermark.width)
         watermark_height = int(w_percent * watermark.height)
         watermark = watermark.resize((watermark_width, watermark_height), Image.LANCZOS)
 
-        # Calculate watermark position
         if "Trên" in position:
             y_position = 0
         elif "Dưới" in position:
@@ -117,7 +66,6 @@ class WatermarkApp:
         else:
             x_position = (original_image.width - watermark_width) // 2
 
-        # Convert opacity to alpha value
         watermark = watermark.convert("RGBA")
         watermark_with_opacity = Image.new("RGBA", watermark.size)
         for x in range(watermark.width):
@@ -125,7 +73,6 @@ class WatermarkApp:
                 r, g, b, a = watermark.getpixel((x, y))
                 watermark_with_opacity.putpixel((x, y), (r, g, b, int(a * opacity)))
 
-        # Paste watermark onto original image
         watermarked_image = original_image.copy()
         watermarked_image.paste(watermark_with_opacity, (x_position, y_position), watermark_with_opacity)
 
@@ -136,47 +83,85 @@ class WatermarkApp:
         image.save(img_byte_array, format="PNG")
         return img_byte_array
 
+    def add_watermark_to_video(self, video_path, watermark_path, output_path, position="center", size=60, opacity=0.5):
+        try:
+            video = VideoFileClip(video_path)
+            watermark = ImageClip(watermark_path).set_duration(video.duration)
+
+            watermark = watermark.set_opacity(opacity)
+            watermark = watermark.resize(width=video.w * size / 100)
+            watermark = watermark.set_position(position)
+
+            final = CompositeVideoClip([video, watermark])
+            final.write_videofile(output_path, codec="libx264", audio_codec="aac")
+
+            return output_path
+        except Exception as e:
+            st.error(f"Error processing video: {e}")
+            return None
+
 def main():
     app = WatermarkApp()
 
-    uploaded_files = st.file_uploader("Chọn ảnh để Watermark", type=["png", "jpg", "jpeg", "gif"], accept_multiple_files=True)
+    tabs = st.tabs(["Image Watermarking", "Video Watermarking"])
 
-    watermark_file = None
-    if watermark_file is None:
-        watermark_option = st.radio("Chọn một trong những logo có sẵn hoặc tải lên mới:", ("Logo HTX Thanh Ngọt Năm Cập", "Logo Dr. KaKa", "Tải lên mới"))
-        if watermark_option == "Logo HTX Thanh Ngọt Năm Cập":
-            watermark_path = "logo1.png"  # Replace with the path to your pre-existing watermark file
-            st.image("logo1.png", width=50)
-        elif watermark_option == "Logo Dr. KaKa":
-            watermark_path = "logo2.png"  # Replace with the path to your pre-existing watermark file
-            st.image("logo2.png", width=50)
-        else:
-            watermark_path = watermark_file = st.file_uploader("Chọn watermark hoặc tải lên mới", type=["png", "jpg", "jpeg", "gif"])
-    else:
-        watermark_path = app.save_uploaded_file(watermark_file, "watermark.png")
+    with tabs[0]:
+        uploaded_files = st.file_uploader("Select images to watermark", type=["png", "jpg", "jpeg", "gif"], accept_multiple_files=True)
+        watermark_file = st.file_uploader("Select watermark image", type=["png", "jpg", "jpeg", "gif"])
+        watermark_position = st.selectbox("Select watermark position", ["Top Right", "Top Center", "Top Left", "Center Right", "Center", "Center Left", "Bottom Right", "Bottom Center", "Bottom Left"], index=4)
+        watermark_size = st.slider("Select watermark size (%)", min_value=1, max_value=100, value=50)
+        opacity = st.slider("Select watermark opacity", min_value=0.0, max_value=1.0, value=0.2)
+        max_dimension_percent = st.slider("Select maximum dimension (%)", min_value=1, max_value=100, value=50)
 
-    watermark_position = st.selectbox("Chọn vị trí watermark", ["Phía Trên Bên Phải", "Phía Trên Ở Giữa", "Phía Trên Bên Trái", "Ở Giữa Bên Phải", "Ở Giữa", "Ở Giữa Bên Trái", "Phía Dưới Bên Phải", "Phía Dưới Ở Giữa", "Phía Dưới Bên Trái"], index=4)
-    watermark_size = st.slider("Chọn kích thước watermark (phần trăm)", min_value=1, max_value=100, value=50)
-    opacity = st.slider("Chọn độ trong suốt của watermark", min_value=0.0, max_value=1.0, value=0.2)
-    max_dimension_percent = st.slider("Chọn kích thước tối đa là bao nhiêu phần trăm so với ảnh gốc (Số càng nhỏ chạy càng nhanh)", min_value=1, max_value=100, value=50)
+        col1, col2, col3 = st.columns([3, 1, 3])
+        with col2:
+            preview_button = st.button("Preview")
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            start_process_button = st.button("Start Watermarking")
 
-    col1, col2, col3 = st.columns([3, 1, 3])
-    with col2:
-        preview_button = st.button("Xem Trước")
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        start_process_button = st.button("Bắt đầu quá trình watermark")
+        if start_process_button:
+            if watermark_file and uploaded_files:
+                app.add_watermark_to_image(uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent)
 
-    if start_process_button:
-        app.add_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+        if preview_button:
+            if watermark_file and uploaded_files:
+                app.preview_watermark(uploaded_files, watermark_file, watermark_position, watermark_size, opacity, max_dimension_percent)
 
-    if preview_button:
-        app.preview_watermark(uploaded_files, watermark_path, watermark_position, watermark_size, opacity, max_dimension_percent)
+    with tabs[1]:
+        uploaded_videos = st.file_uploader("Select videos to watermark", type=["mp4"], accept_multiple_files=True)
+        watermark_file = st.file_uploader("Select watermark image", type=["png", "jpg", "jpeg", "gif"])
+        watermark_position = st.selectbox("Select watermark position", ["center", "top-left", "top-right", "bottom-left", "bottom-right"], index=0)
+        watermark_size = st.slider("Select watermark size (%)", min_value=1, max_value=100, value=60)
+        opacity = st.slider("Select watermark opacity", min_value=0.0, max_value=1.0, value=0.5)
 
-    with st.expander("Hỗ trợ❤️❤️"):
-        st.write("Truong Quoc An")
-        st.write("TPBank")
-        st.write("0327026628")
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            start_video_process_button = st.button("Start Video Watermarking")
+
+        if start_video_process_button:
+            if watermark_file and uploaded_videos:
+                output_directory = "/content/output_videos"
+                if not os.path.exists(output_directory):
+                    os.makedirs(output_directory)
+
+                output_files = []
+                for uploaded_video in uploaded_videos:
+                    video_path = app.save_uploaded_file(uploaded_video, uploaded_video.name)
+                    watermark_path = app.save_uploaded_file(watermark_file, "watermark.png")
+                    output_path = os.path.join(output_directory, f"watermarked_{uploaded_video.name}")
+                    output_file = app.add_watermark_to_video(video_path, watermark_path, output_path, watermark_position, watermark_size, opacity)
+                    if output_file:
+                        output_files.append(output_file)
+
+                if output_files:
+                    output_zip = io.BytesIO()
+                    with zipfile.ZipFile(output_zip, "w") as zipf:
+                        for output_file in output_files:
+                            with open(output_file, "rb") as f:
+                                zipf.writestr(os.path.basename(output_file), f.read())
+
+                    st.download_button(label="Download Watermarked Videos", data=output_zip.getvalue(), file_name="watermarked_videos.zip")
 
 if __name__ == "__main__":
     main()
