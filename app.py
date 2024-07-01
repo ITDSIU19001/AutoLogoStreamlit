@@ -5,6 +5,7 @@ import zipfile
 from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip
 from PIL import Image
 import tempfile
+import numpy as np
 
 class WatermarkApp:
     def __init__(self):
@@ -72,14 +73,29 @@ class WatermarkApp:
 
         return x_position, y_position
 
+
+
     def add_watermark_to_video(self, video_path, watermark_path, output_path, position="center", size=60, opacity=0.5):
         try:
             with st.spinner("Processing video..."):
                 video = VideoFileClip(video_path)
-                watermark = (ImageClip(watermark_path)
-                             .set_duration(video.duration)
-                             .set_opacity(opacity)
-                             .resize(width=int(video.w * size / 100)))
+                
+                # Load the watermark image using PIL
+                watermark_pil = Image.open(watermark_path).convert("RGBA")
+                
+                # Resize the watermark
+                new_width = int(video.w * size / 100)
+                watermark_pil = watermark_pil.resize((new_width, int(new_width * watermark_pil.height / watermark_pil.width)), 
+                                                     resample=Image.LANCZOS)
+                
+                # Convert PIL image to numpy array
+                watermark_array = np.array(watermark_pil)
+                
+                # Apply opacity
+                watermark_array[:, :, 3] = (watermark_array[:, :, 3] * opacity).astype(np.uint8)
+                
+                # Create ImageClip from numpy array
+                watermark = ImageClip(watermark_array, transparent=True).set_duration(video.duration)
     
                 watermark = watermark.set_position(self.get_video_position(position))
     
