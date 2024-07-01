@@ -42,7 +42,7 @@ class WatermarkApp:
 
         max_width = int(original_image.width * max_dimension_percent / 100)
         max_height = int(original_image.height * max_dimension_percent / 100)
-        original_image.thumbnail((max_width, max_height), Image.LANCZOS)
+        original_image.thumbnail((max_width, max_height), Image.ANTIALIAS)
 
         watermark = Image.open(watermark_path)
         watermark_width = original_image.width * size // 100
@@ -110,7 +110,7 @@ def main():
     with tabs[0]:
         uploaded_images = st.file_uploader("Select images to watermark", type=["png", "jpg", "jpeg", "gif"], accept_multiple_files=True)
         
-        watermark_option = st.radio("Select watermark option or upload new:", ("Logo HTX Thanh Ngọt Năm Cập", "Logo Dr. KaKa", "Upload New"))
+        watermark_option = st.radio("Select watermark option or upload new (Image)", ("Logo HTX Thanh Ngọt Năm Cập", "Logo Dr. KaKa", "Upload New"))
         if watermark_option == "Logo HTX Thanh Ngọt Năm Cập":
             watermark_path = "logo1.png"  # Replace with the path to your pre-existing watermark file
             st.image("logo1.png", width=50)
@@ -118,21 +118,21 @@ def main():
             watermark_path = "logo2.png"  # Replace with the path to your pre-existing watermark file
             st.image("logo2.png", width=50)
         else:
-            watermark_file = st.file_uploader("Select or upload watermark image", type=["png", "jpg", "jpeg", "gif"])
+            watermark_file = st.file_uploader("Select or upload watermark image (Image)", type=["png", "jpg", "jpeg", "gif"])
             if watermark_file:
                 watermark_path = app.save_uploaded_file(watermark_file, "watermark.png")
 
-        watermark_position_image = st.selectbox("Select watermark position", ["Top Right", "Top Center", "Top Left", "Center Right", "Center", "Center Left", "Bottom Right", "Bottom Center", "Bottom Left"], index=4)
-        watermark_size_image = st.slider("Select watermark size (%)", min_value=1, max_value=100, value=50)
-        opacity_image = st.slider("Select watermark opacity", min_value=0.0, max_value=1.0, value=0.2)
-        max_dimension_percent_image = st.slider("Select maximum dimension (%)", min_value=1, max_value=100, value=50)
+        watermark_position_image = st.selectbox("Select watermark position (Image)", ["Top Right", "Top Center", "Top Left", "Center Right", "Center", "Center Left", "Bottom Right", "Bottom Center", "Bottom Left"], index=4)
+        watermark_size_image = st.slider("Select watermark size (%) (Image)", min_value=1, max_value=100, value=50)
+        opacity_image = st.slider("Select watermark opacity (Image)", min_value=0.0, max_value=1.0, value=0.2)
+        max_dimension_percent_image = st.slider("Select maximum dimension (%) (Image)", min_value=1, max_value=100, value=50)
 
         col1, col2, col3 = st.columns([3, 1, 3])
         with col2:
-            preview_button_image = st.button("Preview")
+            preview_button_image = st.button("Preview (Image)")
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
-            start_process_button_image = st.button("Start Watermarking")
+            start_process_button_image = st.button("Start Watermarking (Image)")
 
         if start_process_button_image:
             if watermark_path and uploaded_images:
@@ -145,7 +145,7 @@ def main():
     with tabs[1]:
         uploaded_videos = st.file_uploader("Select videos to watermark", type=["mp4"], accept_multiple_files=True)
         
-        watermark_option_video = st.radio("Select watermark option or upload new:", ("Logo HTX Thanh Ngọt Năm Cập", "Logo Dr. KaKa", "Upload New"))
+        watermark_option_video = st.radio("Select watermark option or upload new (Video)", ("Logo HTX Thanh Ngọt Năm Cập", "Logo Dr. KaKa", "Upload New"))
         if watermark_option_video == "Logo HTX Thanh Ngọt Năm Cập":
             watermark_path_video = "logo1.png"  # Replace with the path to your pre-existing watermark file
             st.image("logo1.png", width=50)
@@ -153,13 +153,13 @@ def main():
             watermark_path_video = "logo2.png"  # Replace with the path to your pre-existing watermark file
             st.image("logo2.png", width=50)
         else:
-            watermark_file_video = st.file_uploader("Select or upload watermark image", type=["png", "jpg", "jpeg", "gif"])
+            watermark_file_video = st.file_uploader("Select or upload watermark image (Video)", type=["png", "jpg", "jpeg", "gif"])
             if watermark_file_video:
                 watermark_path_video = app.save_uploaded_file(watermark_file_video, "watermark.png")
 
-        watermark_position_video = st.selectbox("Select watermark position", ["Center", "Top Left", "Top Right", "Bottom Left", "Bottom Right"], index=0)
-        watermark_size_video = st.slider("Select watermark size (%)", min_value=1, max_value=100, value=60)
-        opacity_video = st.slider("Select watermark opacity", min_value=0.0, max_value=1.0, value=0.5)
+        watermark_position_video = st.selectbox("Select watermark position (Video)", ["Center", "Top Left", "Top Right", "Bottom Left", "Bottom Right"], index=0)
+        watermark_size_video = st.slider("Select watermark size (%) (Video)", min_value=1, max_value=100, value=60)
+        opacity_video = st.slider("Select watermark opacity (Video)", min_value=0.0, max_value=1.0, value=0.5)
 
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
