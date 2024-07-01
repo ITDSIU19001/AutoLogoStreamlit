@@ -76,16 +76,16 @@ class WatermarkApp:
         try:
             with st.spinner("Processing video..."):
                 video = VideoFileClip(video_path)
-                watermark = ImageClip(watermark_path).set_duration(video.duration)
-
-                watermark = watermark.set_opacity(opacity)
-                watermark = watermark.resize(width=int(video.w * size / 100))
-
+                watermark = (ImageClip(watermark_path)
+                             .set_duration(video.duration)
+                             .set_opacity(opacity)
+                             .resize(width=int(video.w * size / 100)))
+    
                 watermark = watermark.set_position(self.get_video_position(position))
-
+    
                 final = CompositeVideoClip([video, watermark])
                 final.write_videofile(output_path, codec="libx264", audio_codec="aac")
-
+    
             return output_path
         except Exception as e:
             st.error(f"Error processing video: {e}")
