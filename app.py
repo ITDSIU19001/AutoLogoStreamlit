@@ -76,11 +76,6 @@ class WatermarkApp:
 
         return watermarked_image
 
-    def image_to_bytes(self, image):
-        img_byte_array = io.BytesIO()
-        image.save(img_byte_array, format="PNG")
-        return img_byte_array
-
     def add_watermark_to_video(self, video_path, watermark_path, output_path, position="center", size=60, opacity=0.5):
         try:
             video = VideoFileClip(video_path)
@@ -98,6 +93,11 @@ class WatermarkApp:
             st.error(f"Error processing video: {e}")
             return None
 
+    def image_to_bytes(self, image):
+        img_byte_array = io.BytesIO()
+        image.save(img_byte_array, format="PNG")
+        return img_byte_array
+
 def main():
     app = WatermarkApp()
 
@@ -105,7 +105,19 @@ def main():
 
     with tabs[0]:
         uploaded_images = st.file_uploader("Select images to watermark", type=["png", "jpg", "jpeg", "gif"], accept_multiple_files=True, key="image_uploader")
-        watermark_file_image = st.file_uploader("Select watermark image", type=["png", "jpg", "jpeg", "gif"], key="watermark_image")
+        
+        watermark_option = st.radio("Select watermark option or upload new:", ("Logo HTX Thanh Ngọt Năm Cập", "Logo Dr. KaKa", "Upload New"))
+        if watermark_option == "Logo HTX Thanh Ngọt Năm Cập":
+            watermark_path = "logo1.png"  # Replace with the path to your pre-existing watermark file
+            st.image("logo1.png", width=50)
+        elif watermark_option == "Logo Dr. KaKa":
+            watermark_path = "logo2.png"  # Replace with the path to your pre-existing watermark file
+            st.image("logo2.png", width=50)
+        else:
+            watermark_file = st.file_uploader("Select or upload watermark image", type=["png", "jpg", "jpeg", "gif"])
+            if watermark_file:
+                watermark_path = app.save_uploaded_file(watermark_file, "watermark.png")
+
         watermark_position_image = st.selectbox("Select watermark position", ["Top Right", "Top Center", "Top Left", "Center Right", "Center", "Center Left", "Bottom Right", "Bottom Center", "Bottom Left"], index=4, key="image_position")
         watermark_size_image = st.slider("Select watermark size (%)", min_value=1, max_value=100, value=50, key="image_size")
         opacity_image = st.slider("Select watermark opacity", min_value=0.0, max_value=1.0, value=0.2, key="image_opacity")
@@ -119,17 +131,29 @@ def main():
             start_process_button_image = st.button("Start Watermarking", key="start_image")
 
         if start_process_button_image:
-            if watermark_file_image and uploaded_images:
-                app.add_watermark_to_image(uploaded_images, watermark_file_image, watermark_position_image, watermark_size_image, opacity_image, max_dimension_percent_image)
+            if watermark_path and uploaded_images:
+                app.add_watermark_to_image(uploaded_images, watermark_path, watermark_position_image, watermark_size_image, opacity_image, max_dimension_percent_image)
 
         if preview_button_image:
-            if watermark_file_image and uploaded_images:
-                app.preview_watermark(uploaded_images, watermark_file_image, watermark_position_image, watermark_size_image, opacity_image, max_dimension_percent_image)
+            if watermark_path and uploaded_images:
+                app.preview_watermark(uploaded_images, watermark_path, watermark_position_image, watermark_size_image, opacity_image, max_dimension_percent_image)
 
     with tabs[1]:
         uploaded_videos = st.file_uploader("Select videos to watermark", type=["mp4"], accept_multiple_files=True, key="video_uploader")
-        watermark_file_video = st.file_uploader("Select watermark image", type=["png", "jpg", "jpeg", "gif"], key="watermark_video")
-        watermark_position_video = st.selectbox("Select watermark position", ["center", "top-left", "top-right", "bottom-left", "bottom-right"], index=0, key="video_position")
+        
+        watermark_option_video = st.radio("Select watermark option or upload new:", ("Logo HTX Thanh Ngọt Năm Cập", "Logo Dr. KaKa", "Upload New"))
+        if watermark_option_video == "Logo HTX Thanh Ngọt Năm Cập":
+            watermark_path_video = "logo1.png"  # Replace with the path to your pre-existing watermark file
+            st.image("logo1.png", width=50)
+        elif watermark_option_video == "Logo Dr. KaKa":
+            watermark_path_video = "logo2.png"  # Replace with the path to your pre-existing watermark file
+            st.image("logo2.png", width=50)
+        else:
+            watermark_file_video = st.file_uploader("Select or upload watermark image", type=["png", "jpg", "jpeg", "gif"])
+            if watermark_file_video:
+                watermark_path_video = app.save_uploaded_file(watermark_file_video, "watermark.png")
+
+        watermark_position_video = st.selectbox("Select watermark position", ["Center", "Top Left", "Top Right", "Bottom Left", "Bottom Right"], index=0, key="video_position")
         watermark_size_video = st.slider("Select watermark size (%)", min_value=1, max_value=100, value=60, key="video_size")
         opacity_video = st.slider("Select watermark opacity", min_value=0.0, max_value=1.0, value=0.5, key="video_opacity")
 
@@ -138,7 +162,7 @@ def main():
             start_video_process_button = st.button("Start Video Watermarking", key="start_video")
 
         if start_video_process_button:
-            if watermark_file_video and uploaded_videos:
+            if watermark_path_video and uploaded_videos:
                 output_directory = "/content/output_videos"
                 if not os.path.exists(output_directory):
                     os.makedirs(output_directory)
@@ -146,9 +170,8 @@ def main():
                 output_files = []
                 for uploaded_video in uploaded_videos:
                     video_path = app.save_uploaded_file(uploaded_video, uploaded_video.name)
-                    watermark_path = app.save_uploaded_file(watermark_file_video, "watermark.png")
                     output_path = os.path.join(output_directory, f"watermarked_{uploaded_video.name}")
-                    output_file = app.add_watermark_to_video(video_path, watermark_path, output_path, watermark_position_video, watermark_size_video, opacity_video)
+                    output_file = app.add_watermark_to_video(video_path, watermark_path_video, output_path, watermark_position_video, watermark_size_video, opacity_video)
                     if output_file:
                         output_files.append(output_file)
 
