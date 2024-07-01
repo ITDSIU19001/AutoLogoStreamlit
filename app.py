@@ -42,7 +42,7 @@ class WatermarkApp:
 
         max_width = int(original_image.width * max_dimension_percent / 100)
         max_height = int(original_image.height * max_dimension_percent / 100)
-        original_image.thumbnail((max_width, max_height), Image.ANTIALIAS)
+        original_image.thumbnail((max_width, max_height), Image.LANCZOS)
 
         watermark = Image.open(watermark_path)
         watermark_width = original_image.width * size // 100
