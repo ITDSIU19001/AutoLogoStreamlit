@@ -35,7 +35,7 @@ class WatermarkApp:
             ratio = (max_allowed_pixels / (original_image.width * original_image.height)) ** 0.5
             new_width = int(original_image.width * ratio)
             new_height = int(original_image.height * ratio)
-            original_image = original_image.resize((new_width, new_height))
+            original_image = original_image.resize((new_width, new_height), resample=Image.LANCZOS)
 
         if original_image.mode == "CMYK":
             original_image = original_image.convert("RGB")
@@ -48,7 +48,7 @@ class WatermarkApp:
         watermark_width = original_image.width * size // 100
         w_percent = watermark_width / float(watermark.width)
         watermark_height = int(w_percent * watermark.height)
-        watermark = watermark.resize((watermark_width, watermark_height), Image.LANCZOS)
+        watermark = watermark.resize((watermark_width, watermark_height), resample=Image.LANCZOS)
 
         if "Top" in position:
             y_position = 0
@@ -82,8 +82,20 @@ class WatermarkApp:
             watermark = ImageClip(watermark_path).set_duration(video.duration)
 
             watermark = watermark.set_opacity(opacity)
-            watermark = watermark.resize(width=video.w * size / 100)
-            watermark = watermark.set_position(position)
+            watermark = watermark.resize(width=int(video.w * size / 100))
+
+            if position == "center":
+                watermark = watermark.set_position(("center", "center"))
+            elif position == "top left":
+                watermark = watermark.set_position(("left", "top"))
+            elif position == "top right":
+                watermark = watermark.set_position(("right", "top"))
+            elif position == "bottom left":
+                watermark = watermark.set_position(("left", "bottom"))
+            elif position == "bottom right":
+                watermark = watermark.set_position(("right", "bottom"))
+            else:
+                st.warning("Unknown watermark position. Defaulting to center.")
 
             final = CompositeVideoClip([video, watermark])
             final.write_videofile(output_path, codec="libx264", audio_codec="aac")
