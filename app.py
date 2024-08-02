@@ -13,7 +13,6 @@ class WatermarkApp:
         st.markdown("<h1 style='text-align: center;'>Auto Watermark</h1>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: right;'>Made by Truong Quoc An</div>", unsafe_allow_html=True)
 
-    @st.cache_data
     def load_image(self, image_file):
         return Image.open(image_file)
 
