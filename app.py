@@ -210,7 +210,6 @@ def get_watermark_path(context):
             watermark_path = None
     return watermark_path
 
-@st.cache_data
 def save_image(image, filename):
     buffered = io.BytesIO()
     image.save(buffered, format="PNG")
