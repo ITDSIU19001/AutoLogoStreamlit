@@ -154,6 +154,8 @@ def process_images(app):
 
     if preview_button_image or start_process_button_image:
         if watermark_path and uploaded_images:
+            watermarked_images = []
+            filenames = []
             for uploaded_file in uploaded_images:
                 original_image = app.load_image(uploaded_file)
                 watermarked_image = app.add_watermark_to_image(
@@ -162,9 +164,11 @@ def process_images(app):
                 )
                 if watermarked_image:
                     st.image(watermarked_image, caption=f'Processed Image: {uploaded_file.name}', use_column_width=True)
-                    if start_process_button_image:
-                        save_image(watermarked_image, uploaded_file.name)
-
+                    watermarked_images.append(watermarked_image)
+                    filenames.append(uploaded_file.name)
+            
+            if start_process_button_image and watermarked_images:
+                save_image(watermarked_images, filenames)
 def process_videos(app):
     uploaded_videos = st.file_uploader("Select videos to watermark", type=["mp4"], accept_multiple_files=True)
     
@@ -210,15 +214,22 @@ def get_watermark_path(context):
             watermark_path = None
     return watermark_path
 
-def save_image(image, filename):
-    buffered = io.BytesIO()
-    image.save(buffered, format="PNG")
+def save_image(images, filenames):
+    output_zip = io.BytesIO()
+    with zipfile.ZipFile(output_zip, "w") as zipf:
+        for image, filename in zip(images, filenames):
+            buffered = io.BytesIO()
+            image.save(buffered, format="PNG")
+            zipf.writestr(f"watermarked_{filename}", buffered.getvalue())
+
     st.download_button(
-        label=f"Download {filename}",
-        data=buffered.getvalue(),
-        file_name=f"watermarked_{filename}",
-        mime="image/png"
+        label="Download Watermarked Images",
+        data=output_zip.getvalue(),
+        file_name="watermarked_images.zip",
+        mime="application/zip"
     )
+
+
 
 def save_videos(output_files):
     output_zip = io.BytesIO()
